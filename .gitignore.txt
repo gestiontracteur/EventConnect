@@ -1,0 +1,14 @@
+# Fichiers générés par Android Studio
+.gradle/
+build/
+local.properties
+.idea/libraries/
+*.iml
+
+# Fichiers temporaires et système
+*.log
+*.tmp
+.DS_Store
+
+# Forcer l’inclusion du dossier Documentation
+!Documentation/
