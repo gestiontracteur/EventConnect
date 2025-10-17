@@ -28,6 +28,10 @@ interface EventDao {
     suspend fun getAllEventsOnce(): List<EventEntity>
     @Query("DELETE FROM events WHERE id = :eventId")
     suspend fun deleteEventById(eventId: Int)
+    @Query("SELECT * FROM events WHERE id = :eventId LIMIT 1")
+    suspend fun getEventById(eventId: Int): EventEntity?
+    @Query("UPDATE events SET isParticipating = :participating WHERE id = :eventId")
+    suspend fun updateParticipation(eventId: Int, participating: Boolean)
 
 }
 

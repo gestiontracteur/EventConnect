@@ -4,6 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -13,6 +17,7 @@ import com.example.eventconnect.data.EventDatabase
 import com.example.eventconnect.ui.MainScreen
 import com.example.eventconnect.ui.EventDetailScreen
 import com.example.eventconnect.ui.theme.EventConnectTheme
+import com.example.eventconnect.ui.theme.ThemeViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,39 +26,46 @@ class MainActivity : ComponentActivity() {
 
         val db = EventDatabase.getDatabase(this)
         val eventDao = db.eventDao()
+        val themeViewModel: ThemeViewModel by viewModels()
 
         setContent {
-            EventConnectTheme {
-                val navController = rememberNavController()
+            val isDarkTheme by themeViewModel.isDarkTheme.collectAsState()
 
-                NavHost(
-                    navController = navController,
-                    startDestination = "main"
-                ) {
-                    // écran principal (liste + ajout)
-                    composable("main") {
-                        MainScreen(
-                            eventDao = eventDao,
-                            onEventClick = { eventId ->
-                                navController.navigate("details/$eventId")
-                            }
-                        )
-                    }
+            EventConnectTheme(darkTheme = isDarkTheme) {
+                Surface {
+                    val navController = rememberNavController()
 
-                    // écran détail (reçoit l'id en Int)
-                    composable(
-                        route = "details/{eventId}",
-                        arguments = listOf(navArgument("eventId") { type = NavType.IntType })
-                    ) { backStackEntry ->
-                        val eventId = backStackEntry.arguments?.getInt("eventId") ?: return@composable
-                        EventDetailScreen(
-                            eventDao = eventDao,
-                            eventId = eventId,
-                            onBack = { navController.popBackStack() }
-                        )
+                    NavHost(
+                        navController = navController,
+                        startDestination = "main"
+                    ) {
+                        // --- Écran principal ---
+                        composable("main") {
+                            MainScreen(
+                                eventDao = eventDao,
+                                onEventClick = { eventId ->
+                                    navController.navigate("details/$eventId")
+                                },
+                                onToggleTheme = { themeViewModel.toggleTheme() },
+                                isDarkTheme = isDarkTheme
+                            )
+                        }
+
+                        // --- Écran détail ---
+                        composable(
+                            route = "details/{eventId}",
+                            arguments = listOf(navArgument("eventId") { type = NavType.IntType })
+                        ) { backStackEntry ->
+                            val eventId = backStackEntry.arguments?.getInt("eventId") ?: return@composable
+                            EventDetailScreen(
+                                eventDao = eventDao,
+                                eventId = eventId,
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
                     }
-                } // fin NavHost
-            } // fin EventConnectTheme
-        } // fin setContent
-    } // fin onCreate
-} // fin MainActivity
+                }
+            }
+        }
+    }
+}
